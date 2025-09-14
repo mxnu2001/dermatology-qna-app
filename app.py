@@ -7,7 +7,7 @@ import json
 
 
 # --- Google Sheets setup ---
-SHEET_NAME = "Dermatology_QA"
+SHEET_NAME = "dermatology_questions"
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
