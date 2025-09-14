@@ -9,16 +9,17 @@ import json
 # --- Google Sheets setup ---
 SHEET_NAME = "Dermatology_QA"
 
-
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 # Load credentials from Streamlit secrets
 creds_dict = json.loads(st.secrets["google_creds"]["json"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 
+# Authorize and open sheet
 client = gspread.authorize(creds)
-
 sheet = client.open(SHEET_NAME).sheet1
 df = get_as_dataframe(sheet).fillna("")  # Load sheet as DataFrame
+
 
 # --- Streamlit UI ---
 st.title("🧴 Dermatology Q&A Entry Form")
