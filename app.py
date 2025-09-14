@@ -1,29 +1,32 @@
 import streamlit as st
 import pandas as pd
+import gspread
+from gspread_dataframe import set_with_dataframe, get_as_dataframe
+from oauth2client.service_account import ServiceAccountCredentials
 
-FILE_PATH = "dermatology_questions.xlsx"
+# --- Google Sheets setup ---
+SHEET_NAME = "Dermatology_QA"
+JSON_KEY_FILE = "service_account.json"  # Upload this JSON to your repo or Streamlit secrets
 
-# Load data
-df = pd.read_excel(FILE_PATH)
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name(JSON_KEY_FILE, scope)
+client = gspread.authorize(creds)
 
+sheet = client.open(SHEET_NAME).sheet1
+df = get_as_dataframe(sheet).fillna("")  # Load sheet as DataFrame
+
+# --- Streamlit UI ---
 st.title("🧴 Dermatology Q&A Entry Form")
 
-# Select category first
 category = st.selectbox("Select Category:", df["Category"].unique())
 filtered_df = df[df["Category"] == category]
 
-# Select question
 question = st.selectbox("Select Question:", filtered_df["Question"].tolist())
 row_index = df[df["Question"] == question].index[0]
 
-# Input answer
-answer = st.text_area("Your Answer", value=df.loc[row_index, "Answer"] if "Answer" in df.columns else "")
+answer = st.text_area("Your Answer", value=df.loc[row_index, "Answer"])
 
-# Save button
 if st.button("💾 Save Answer"):
-    # If 'Answer' column does not exist, create it
-    if "Answer" not in df.columns:
-        df["Answer"] = ""
     df.loc[row_index, "Answer"] = answer
-    df.to_excel(FILE_PATH, index=False)
+    set_with_dataframe(sheet, df)  # Save back to Google Sheet
     st.success("✅ Answer saved successfully!")
